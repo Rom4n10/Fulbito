@@ -1,0 +1,65 @@
+# ##################################################################
+# FULBITO - MATCHMAKING DEPORTIVO APP
+# .gitignore - Configuración de Archivos Ignorados para Git
+# ##################################################################
+
+# Dependencies (Dependencias de Node)
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js Build and Outputs (Compilación y Salidas de Next.js)
+.next/
+out/
+build/
+dist/
+
+# Environmental Variables and Secrets (CRITICAL - Variables de entorno)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+*.env.local
+
+# Supabase Local Development (Archivos temporales de Supabase)
+supabase/.temp/
+supabase/.branches/
+supabase/functions/.env
+
+# IDEs and Editor Configuration (Configuraciones locales de editores)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS and System Files (Archivos del Sistema Operativo)
+.DS_Store
+.DS_Store?
+._*
+ehthumbs.db
+Thumbs.db
+Icon?
+
+# Testing and Logs (Pruebas y Logs de error)
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

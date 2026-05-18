@@ -1,0 +1,160 @@
+Documento de Contexto y Especificación de Arquitectura: Matchmaking Deportivo App
+1. Visión General del Producto
+Plataforma web (MVP) enfocada en el "matchmaking" para deportes amateur (Fútbol y Pádel). Resuelve la necesidad de completar equipos o encontrar rivales de último momento. Incluye un sistema de reputación para mitigar ausencias o conflictos, mostrando estadísticas en los perfiles. Prioriza la velocidad de puesta a producción, utilizando WhatsApp como puente de comunicación para evitar la complejidad de un chat interno, y automatizaciones en la base de datos para mantener el feed principal limpio de eventos pasados sin perder datos históricos.
+
+2. Stack Tecnológico & Buenas Prácticas
+Framework Frontend: Next.js (App Router), React, TypeScript.
+
+Buenas prácticas: Uso estricto de TypeScript para tipado (generando tipos de Supabase con supabase gen types). Patrón de Server Components para fetching de datos y Client Components solo cuando se requiera interactividad. Server Actions para mutaciones.
+
+Estilos y UI: Tailwind CSS.
+
+Buenas prácticas: Enfoque mobile-first. UI moderna y limpia, incorporando sutiles efectos de glassmorphism (ej. backdrop-blur-md bg-white/30 o bordes semitransparentes) en tarjetas flotantes y modales para un aspecto premium. Componentización mediante Atomic Design.
+
+Backend & Base de Datos: Supabase (PostgreSQL).
+
+Buenas prácticas: Seguridad implementada mediante Row Level Security (RLS). Operaciones recurrentes delegadas a la base de datos (Triggers y Cron Jobs).
+
+Autenticación: Supabase Auth (OAuth con Google).
+
+3. Historias de Usuario (User Stories)
+Autenticación y Perfil:
+
+US1: Como usuario, quiero iniciar sesión con Google con un solo clic.
+
+US2: Como usuario, quiero ver y editar mi perfil, actualizando mi fecha de nacimiento, ubicación (ej. San Martín, Mendoza) y número de teléfono (necesario para el matchmaking). En mi perfil público se debe ver mi edad calculada y mi cantidad de partidos jugados.
+
+Matchmaking (Feed principal):
+
+US3: Como usuario, quiero publicar un partido buscando "Rival" o "Jugador faltante", definiendo fecha, hora, deporte, lugar y, opcionalmente, un rango de edad preferido.
+
+US4: Como usuario, quiero postularme a un partido abierto desde el feed principal.
+
+US5: Como creador, quiero ver el perfil (incluyendo la edad, ej: 21 años) y la reputación de los postulantes para aceptarlos o rechazarlos.
+
+Comunicación Ágil (WhatsApp Bridge):
+
+US6: Como usuario aceptado en un partido, quiero poder ver un botón de "Contactar por WhatsApp" que me dirija al número del creador con un mensaje pre-armado, y viceversa.
+
+Reputación y Limpieza:
+
+US7: Como jugador, quiero calificar a mis compañeros una vez finalizado el partido (etiquetas booleanas: conflictivo, flake/se da de baja a último momento).
+
+US8: Como sistema, los partidos cuya fecha ya pasó deben actualizar su estado automáticamente para desaparecer del feed principal, conservando el historial para las estadísticas y calificaciones.
+
+4. Esquema de Base de Datos y Automatizaciones (PostgreSQL)
+Este script incluye tablas, el trigger de autenticación y el trabajo programado para la limpieza automática del feed.
+
+SQL
+-- Habilitar extensiones
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_cron";
+
+-- 1. Tablas y Tipos Enumerados
+CREATE TYPE match_type AS ENUM ('busco_rival', 'busco_jugador');
+CREATE TYPE match_sport AS ENUM ('padel', 'futbol');
+CREATE TYPE match_status AS ENUM ('abierto', 'confirmado', 'completado', 'cancelado');
+CREATE TYPE request_status AS ENUM ('pendiente', 'aceptado', 'rechazado');
+
+CREATE TABLE public.users (
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    first_name TEXT NOT NULL,
+    last_name TEXT,
+    avatar_url TEXT,
+    location TEXT,
+    phone_number TEXT,
+    birth_date DATE, -- Guardamos la fecha para calcular la edad dinámicamente en el frontend
+    matches_played INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE public.matches (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    creator_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    type match_type NOT NULL,
+    sport match_sport NOT NULL,
+    location_name TEXT NOT NULL,
+    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    min_age INTEGER, -- Edad mínima preferida (Opcional)
+    max_age INTEGER, -- Edad máxima preferida (Opcional)
+    status match_status DEFAULT 'abierto',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE public.match_requests (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    match_id UUID REFERENCES public.matches(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    status request_status DEFAULT 'pendiente',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(match_id, user_id)
+);
+
+CREATE TABLE public.reviews (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    reviewer_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    reviewee_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    match_id UUID REFERENCES public.matches(id) ON DELETE CASCADE,
+    comment TEXT,
+    is_conflictive BOOLEAN DEFAULT FALSE,
+    is_flake BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(reviewer_id, reviewee_id, match_id)
+);
+
+-- 2. Trigger de Autenticación
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, first_name, last_name, avatar_url)
+  VALUES (
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'full_name', 'Usuario'),
+    '',
+    new.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- 3. Función y Cron Job para limpiar el Feed (Soft Delete / Update Status)
+CREATE OR REPLACE FUNCTION update_expired_matches()
+RETURNS void AS $$
+BEGIN
+  -- Pasar a 'completado' si hay postulaciones aceptadas
+  UPDATE public.matches m
+  SET status = 'completado'
+  WHERE scheduled_at < NOW() AND status IN ('abierto', 'confirmado')
+  AND EXISTS (SELECT 1 FROM public.match_requests mr WHERE mr.match_id = m.id AND mr.status = 'aceptado');
+
+  -- Pasar a 'cancelado' si NO hay postulaciones aceptadas
+  UPDATE public.matches m
+  SET status = 'cancelado'
+  WHERE scheduled_at < NOW() AND status IN ('abierto', 'confirmado')
+  AND NOT EXISTS (SELECT 1 FROM public.match_requests mr WHERE mr.match_id = m.id AND mr.status = 'aceptado');
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ejecutar la limpieza cada 1 hora usando pg_cron
+SELECT cron.schedule('clean_expired_matches', '0 * * * *', 'SELECT update_expired_matches()');
+5. Directivas de Seguridad (Row Level Security - RLS)
+users: SELECT público. UPDATE solo si auth.uid() = id.
+
+matches: SELECT público. INSERT si el usuario está autenticado. UPDATE/DELETE solo si auth.uid() = creator_id.
+
+match_requests: Creador de la request puede hacer INSERT o cancelar (DELETE). El creador del partido puede hacer UPDATE a estado aceptado o rechazado.
+
+reviews: INSERT permitido solo si existe un registro en matches con status = 'completado' que involucre al reviewer_id y al reviewee_id.
+
+6. Lógica de Negocio y Utilidades Frontend
+Cálculo de Edad: Crear una función utilitaria calculateAge(birth_date: Date): number en TypeScript. Esta función debe usarse siempre en el frontend para renderizar la edad del usuario, calculada en tiempo real.
+
+Filtrado de Feed Principal: La consulta a Supabase en la página principal (/) DEBE incluir estrictamente .eq('status', 'abierto') y .gte('scheduled_at', new Date().toISOString()).
+
+Exposición de Teléfono (Privacidad): El frontend tiene prohibido mostrar el campo phone_number públicamente. La UI solo debe habilitar la visualización del teléfono o el enlace de WhatsApp si el usuario autenticado tiene una match_request en estado 'aceptado' para ese partido, o si es el creador del partido viendo a un jugador aceptado.
+
+WhatsApp CTA: Utilizar la URL [https://wa.me/](https://wa.me/){numero_limpio}?text={url_encoded_message}. Ejemplo de mensaje: "¡Hola! Acordamos a través de la app jugar el partido de {deporte} hoy en {location_name}."

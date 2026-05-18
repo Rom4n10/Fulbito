@@ -1,0 +1,30 @@
+Cuando despliego una lista me sale todo blanco deberiamos cambiar esto 
+Agregar comentarios informativos de como usar la app para dar una mejor experiencia al usuario
+Body exceeded 1 MB limit.
+To configure the body size limit for Server Actions, see: https://nextjs.org/docs/app/api-reference/next-config-js/serverActions#bodysizelimit
+src/app/teams/create/CreateTeamForm.tsx (27:5) @ CreateTeamForm
+
+
+  25 |
+  26 |   return (
+> 27 |     <form action={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1...
+     |     ^
+  28 |       <div>
+  29 |         <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: ...
+  30 |           Nombre del equipo *
+Call Stack
+8
+
+Show 5 ignore-listed frame(s)
+form
+<anonymous>
+CreateTeamForm
+src/app/teams/create/CreateTeamForm.tsx (27:5)
+CreateTeamPage
+src\app\teams\create\page.tsx (23:9)
+Mejor manejo de los errores     
+la forma de elegir fecha y hora esta muy tosca mejorar esto para la experiencia de usuario
+Proteccion ante la ansiedad del usuario es decir por ejemplo si yo estoy creando un equipo y le doy 5 veces clic al boton crear que solo se cree una vez esta buena practica debe estar en todos los botones
+Revisar flujo de postularse a un partido no me deja postularme a ningun partido, no sale nada al final ni error ni mensaje positivo 
+Agregar mensajes de error y de exito en cada accion que realice el usuario 
+poder buscar rivales o equipos para desafiarlos o desafiar a un equipo por ejemplo "hola equipo aguante boca les gustaria jugar un partido contra nosotros?"
