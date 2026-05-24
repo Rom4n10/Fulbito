@@ -278,15 +278,13 @@ export default async function TeamDetailPage({ params }: TeamDetailProps) {
             />
           </div>
         ) : (
-          challengeableTeams.length > 0 && (
-            <div style={{ marginTop: "16px" }}>
-              <ChallengeModal
-                myTeams={challengeableTeams}
-                challengedTeamId={id}
-                challengedTeamName={team.name}
-              />
-            </div>
-          )
+          <div style={{ marginTop: "16px" }}>
+            <ChallengeModal
+              myTeams={challengeableTeams}
+              challengedTeamId={id}
+              challengedTeamName={team.name}
+            />
+          </div>
         )}
       </div>
 

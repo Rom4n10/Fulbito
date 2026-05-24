@@ -51,7 +51,7 @@ export async function createTeam(formData: FormData) {
     }
   }
 
-  redirect(`/teams/${team.id}`);
+  return { success: true, teamId: team.id };
 }
 
 export async function updateTeam(teamId: string, formData: FormData) {

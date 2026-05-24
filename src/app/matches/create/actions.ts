@@ -24,6 +24,10 @@ export async function createMatch(formData: FormData) {
     return { error: "Completá todos los campos obligatorios" };
   }
 
+  if (new Date(scheduledAt) <= new Date()) {
+    return { error: "La fecha y hora del partido deben ser en el futuro" };
+  }
+
   // Resolve location name from venue if selected
   let resolvedLocation = locationName;
   if (venueId && !locationName) {
@@ -55,5 +59,5 @@ export async function createMatch(formData: FormData) {
   });
 
   if (error) return { error: error.message };
-  redirect("/");
+  return { success: true };
 }

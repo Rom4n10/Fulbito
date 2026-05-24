@@ -12,6 +12,7 @@ import { MVPWinner } from "./MVPWinner";
 import { getMVPResult } from "@/app/actions/mvp";
 import { ApplyMatchButton } from "./ApplyMatchButton";
 import type { Tables } from "@/types/database";
+import { MatchReviews } from "./MatchReviews";
 
 interface MatchDetailProps {
   params: Promise<{ id: string }>;
@@ -48,10 +49,12 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
   const userRequest = requests?.find((r) => r.user_id === user.id);
   const isParticipant = isCreator || userRequest?.status === "aceptado";
 
-  // Check MVP state if match is completed
+  // Check MVP and reviews state if match is completed
   let mvpResult = null;
   let hasVoted = false;
   let mvpEligiblePlayers: Tables<"users">[] = [];
+  let otherParticipants: Tables<"users">[] = [];
+  let initialReviewedIds: string[] = [];
 
   if (match.status === "completado") {
     mvpResult = await getMVPResult(id);
@@ -76,6 +79,17 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
         seen.add(p.id);
         return true;
       });
+
+      // Other participants for reviews
+      otherParticipants = mvpEligiblePlayers.filter((p) => p.id !== user.id);
+
+      // Fetch reviews written by the current user
+      const { data: userReviews } = await supabase
+        .from("reviews")
+        .select("reviewee_id")
+        .eq("match_id", id)
+        .eq("reviewer_id", user.id);
+      initialReviewedIds = userReviews?.map((r) => r.reviewee_id).filter(Boolean) as string[] ?? [];
     }
   }
 
@@ -242,6 +256,15 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
             </GlassCard>
           )}
         </div>
+      )}
+
+      {/* Reviews Section for completed matches */}
+      {match.status === "completado" && isParticipant && (
+        <MatchReviews
+          matchId={id}
+          otherParticipants={otherParticipants}
+          initialReviewedIds={initialReviewedIds}
+        />
       )}
 
       {/* Applicants Section */}

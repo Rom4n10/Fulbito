@@ -14,7 +14,10 @@ interface CreateMatchFormProps {
   teams: Tables<"teams">[];
 }
 
+import { useRouter } from "next/navigation";
+
 export default function CreateMatchPage({ departments, venues, teams }: CreateMatchFormProps) {
+  const router = useRouter();
   const [sport, setSport] = useState<"futbol" | "padel">("futbol");
   const [departmentId, setDepartmentId] = useState<string>("");
   const [useCustomVenue, setUseCustomVenue] = useState(false);
@@ -24,11 +27,18 @@ export default function CreateMatchPage({ departments, venues, teams }: CreateMa
   );
 
   async function handleSubmit(formData: FormData) {
+    const scheduledAt = formData.get("scheduled_at") as string;
+    if (scheduledAt && new Date(scheduledAt) <= new Date()) {
+      toast.error("La fecha y hora del partido deben ser en el futuro");
+      return;
+    }
+
     const result = await createMatch(formData);
     if (result?.error) {
       toast.error(result.error);
-    } else {
+    } else if (result?.success) {
       toast.success("¡Partido publicado con éxito!");
+      router.push("/");
     }
   }
 

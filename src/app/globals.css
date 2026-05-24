@@ -142,14 +142,19 @@ body {
   width: 100%;
 }
 
+select.glass-input {
+  background-color: #11122a !important; /* Solid dark background to fix white native dropdowns on Chrome/Edge */
+}
+
 select option,
-.glass-input option {
+.glass-input option,
+select.glass-input option {
   background-color: #0f172a !important;
   color: #f8fafc !important;
 }
 
 select,
-.glass-input select {
+select.glass-input {
   color-scheme: dark;
 }
 

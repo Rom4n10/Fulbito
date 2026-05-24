@@ -33,9 +33,9 @@ export function ProfileForm({ profile, departments }: ProfileFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("La imagen no puede superar los 5MB");
+    // Validate size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("La imagen del avatar no puede superar los 2MB");
       return;
     }
 
@@ -121,6 +121,9 @@ export function ProfileForm({ profile, departments }: ProfileFormProps) {
           Teléfono (con código de país)
         </label>
         <input name="phone_number" defaultValue={profile.phone_number ?? ""} className="glass-input" placeholder="Ej: +5491112345678" type="tel" />
+        <p style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", marginTop: "4px" }}>
+          Requerido para coordinar por WhatsApp. Solo se comparte con jugadores confirmados en tus partidos.
+        </p>
       </div>
 
       <div>
@@ -128,6 +131,9 @@ export function ProfileForm({ profile, departments }: ProfileFormProps) {
           Fecha de nacimiento
         </label>
         <input name="birth_date" defaultValue={profile.birth_date ?? ""} className="glass-input" type="date" style={{ colorScheme: "dark" }} />
+        <p style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", marginTop: "4px" }}>
+          Se usa para calcular tu edad y mostrarla en tu perfil y postulaciones.
+        </p>
       </div>
 
       {/* Free Agent Section */}

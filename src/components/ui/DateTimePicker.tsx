@@ -15,6 +15,7 @@ export function DateTimePicker({ name, required = false }: DateTimePickerProps) 
   const [customTime, setCustomTime] = useState("");
   const [showCustomTime, setShowCustomTime] = useState(false);
   const [value, setValue] = useState("");
+  const [isPastWarning, setIsPastWarning] = useState(false);
 
   const quickTimes = ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
 
@@ -36,17 +37,40 @@ export function DateTimePicker({ name, required = false }: DateTimePickerProps) 
 
     if (dateStr && timeStr) {
       // Create local ISO-like string: YYYY-MM-DDTHH:MM
-      setValue(`${dateStr}T${timeStr}`);
+      const combined = `${dateStr}T${timeStr}`;
+      setValue(combined);
+
+      // Check if it's in the past
+      const selectedDateObj = new Date(combined);
+      setIsPastWarning(selectedDateObj <= today);
     } else {
       setValue("");
+      setIsPastWarning(false);
     }
   }, [selectedTab, customDate, selectedTime, customTime, showCustomTime]);
 
-  // Set initial custom date to today
+  // Set initial default date and time (UX optimization for future dates)
   useEffect(() => {
     const today = new Date();
+    const currentHour = today.getHours();
     setCustomDate(today.toISOString().split("T")[0]);
-    setCustomTime("20:00");
+
+    if (currentHour >= 22) {
+      // If late, default to tomorrow at 20:00
+      setSelectedTab("manana");
+      setSelectedTime("20:00");
+      setCustomTime("20:00");
+    } else {
+      setSelectedTab("hoy");
+      // Find first quick time at least 1 hour in the future
+      const futureQuickTime = quickTimes.find((t) => {
+        const [h] = t.split(":").map(Number);
+        return h > currentHour + 1;
+      });
+      const defaultTime = futureQuickTime || "20:00";
+      setSelectedTime(defaultTime);
+      setCustomTime(defaultTime);
+    }
   }, []);
 
   return (
@@ -200,23 +224,23 @@ export function DateTimePicker({ name, required = false }: DateTimePickerProps) 
             marginTop: "4px",
             padding: "12px 14px",
             borderRadius: "var(--border-radius-sm)",
-            background: "rgba(99, 102, 241, 0.08)",
-            border: "1px solid rgba(99, 102, 241, 0.2)",
-            color: "var(--color-primary-light)",
+            background: isPastWarning ? "rgba(239, 68, 68, 0.08)" : "rgba(99, 102, 241, 0.08)",
+            border: isPastWarning ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(99, 102, 241, 0.2)",
+            color: isPastWarning ? "var(--color-accent-red)" : "var(--color-primary-light)",
             display: "flex",
             alignItems: "center",
             gap: "10px",
             fontSize: "0.85rem",
             fontWeight: 600,
-            boxShadow: "0 4px 12px rgba(99, 102, 241, 0.05)",
+            boxShadow: isPastWarning ? "0 4px 12px rgba(239, 68, 68, 0.05)" : "0 4px 12px rgba(99, 102, 241, 0.05)",
           }}
         >
-          <span style={{ fontSize: "1.2rem" }}>📅</span>
+          <span style={{ fontSize: "1.2rem" }}>{isPastWarning ? "⚠️" : "📅"}</span>
           <div>
             <span style={{ color: "var(--text-secondary)", fontWeight: 400, display: "block", fontSize: "0.75rem", marginBottom: "2px" }}>
-              CONFIRMACIÓN DE HORARIO
+              {isPastWarning ? "ATENCIÓN: FECHA EN EL PASADO" : "CONFIRMACIÓN DE HORARIO"}
             </span>
-            <span style={{ color: "var(--text-primary)" }}>
+            <span style={{ color: isPastWarning ? "var(--color-accent-red)" : "var(--text-primary)" }}>
               {(() => {
                 try {
                   const [datePart, timePart] = value.split("T");
@@ -229,7 +253,7 @@ export function DateTimePicker({ name, required = false }: DateTimePickerProps) 
                     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
                   ];
-                  return `${daysOfWeek[dateObj.getDay()]}, ${Number(day)} de ${monthsOfYear[dateObj.getMonth()]} a las ${hours}:${minutes} hs`;
+                  return `${daysOfWeek[dateObj.getDay()]} ${Number(day)} de ${monthsOfYear[dateObj.getMonth()]} a las ${hours}:${minutes} hs`;
                 } catch {
                   return "Fecha seleccionada";
                 }

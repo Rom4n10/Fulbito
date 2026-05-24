@@ -4,6 +4,7 @@ import { useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { submitReview } from "@/app/actions/reviews";
+import { toast } from "react-hot-toast";
 
 interface ReviewModalProps {
   matchId: string;
@@ -27,6 +28,7 @@ export function ReviewModal({ matchId, revieweeId, revieweeName, onClose }: Revi
       setError(result.error);
       setLoading(false);
     } else {
+      toast.success("¡Jugador calificado con éxito!");
       onClose();
     }
   }

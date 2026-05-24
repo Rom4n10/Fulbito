@@ -6,11 +6,14 @@ import { useState } from "react";
 import type { Tables } from "@/types/database";
 import { toast } from "react-hot-toast";
 
+import { useRouter } from "next/navigation";
+
 interface CreateTeamFormProps {
   departments: Tables<"departments">[];
 }
 
 export default function CreateTeamForm({ departments }: CreateTeamFormProps) {
+  const router = useRouter();
   const [logoError, setLogoError] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,8 +37,9 @@ export default function CreateTeamForm({ departments }: CreateTeamFormProps) {
     const result = await createTeam(formData);
     if (result?.error) {
       toast.error(result.error);
-    } else {
+    } else if (result?.success && result?.teamId) {
       toast.success("¡Equipo creado con éxito!");
+      router.push(`/teams/${result.teamId}`);
     }
   }
 
