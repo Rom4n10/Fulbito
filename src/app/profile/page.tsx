@@ -138,6 +138,124 @@ export default async function ProfilePage() {
         </GlassCard>
       )}
 
+      {/* Virtual Player Card Preview */}
+      <GlassCard
+        variant="elevated"
+        padding="md"
+        className="animate-fade-in-up stagger-3"
+        style={{
+          position: "relative",
+          marginBottom: "20px",
+          overflow: "hidden",
+          background: "linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.9))",
+          border: "2px solid rgba(16, 185, 129, 0.25)",
+          boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.4)",
+          borderRadius: "16px"
+        }}
+      >
+        <div style={{
+          position: "absolute", top: "-40px", right: "-40px", width: "120px", height: "120px",
+          background: profile.preferred_sport === "padel" ? "rgba(14, 165, 233, 0.15)" : "rgba(16, 185, 129, 0.15)",
+          filter: "blur(40px)", borderRadius: "50%"
+        }} />
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+          <div>
+            <span style={{
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: profile.preferred_sport === "padel" ? "var(--color-accent-blue)" : "var(--color-accent-green)",
+              background: "rgba(255,255,255,0.05)",
+              padding: "4px 8px",
+              borderRadius: "4px"
+            }}>
+              Ficha Oficial Fulbito
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+            <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "white" }}>
+              {reputation.matchesPlayed > 0 
+                ? Math.max(50, Math.min(99, Math.round(99 - (reputation.flakeCount * 15) - (reputation.conflictiveCount * 10) + (reputation.mvpCount * 3))))
+                : "75"
+              }
+            </span>
+            <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Rating</span>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <div style={{ position: "relative" }}>
+            <div className="avatar avatar-lg" style={{
+              width: "64px",
+              height: "64px",
+              fontSize: "1.3rem",
+              border: "3px solid var(--glass-border)",
+              boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
+            }}>
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt={profile.first_name} />
+              ) : (
+                getInitials(profile.first_name, profile.last_name)
+              )}
+            </div>
+            {profile.is_free_agent && (
+              <span style={{
+                position: "absolute", bottom: "0", right: "0",
+                width: "14px", height: "14px", borderRadius: "50%",
+                background: "var(--color-accent-green)", border: "2px solid #0f172a",
+                boxShadow: "0 0 8px var(--color-accent-green)"
+              }} />
+            )}
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "white" }}>
+              {profile.first_name} {profile.last_name}
+            </h3>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+              {profile.preferred_sport === "futbol" && "⚽ Fútbol"}
+              {profile.preferred_sport === "padel" && "🎾 Pádel"}
+              {!profile.preferred_sport && "⚽ Multideporte"}
+              {profile.preferred_sport === "futbol" && profile.preferred_football_position && ` · ${profile.preferred_football_position.toUpperCase()}`}
+              {profile.preferred_sport === "padel" && profile.preferred_padel_position && ` · ${profile.preferred_padel_position.toUpperCase()}`}
+            </p>
+            <p style={{ fontSize: "0.75rem", color: "var(--text-tertiary)", marginTop: "4px" }}>
+              📍 {profile.department?.name ?? "Mendoza"}
+            </p>
+          </div>
+        </div>
+
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px",
+          marginTop: "16px", paddingTop: "12px", borderTop: "1px solid rgba(255,255,255,0.05)",
+          textAlign: "center"
+        }}>
+          <div>
+            <p style={{ fontSize: "0.65rem", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Asistencia</p>
+            <p style={{ fontSize: "0.9rem", fontWeight: 700, color: reputation.flakeCount === 0 ? "var(--color-accent-green)" : "var(--color-accent-amber)", marginTop: "2px" }}>
+              {reputation.matchesPlayed > 0 
+                ? `${Math.round(100 - (reputation.flakeCount / Math.max(1, reputation.matchesPlayed)) * 100)}%`
+                : "100%"
+              }
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: "0.65rem", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Conducta</p>
+            <p style={{ fontSize: "0.9rem", fontWeight: 700, color: reputation.conflictiveCount === 0 ? "var(--color-accent-green)" : "var(--color-accent-red)", marginTop: "2px" }}>
+              {reputation.conflictiveCount === 0 ? "Limpia" : "Advertida"}
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: "0.65rem", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Rendimiento</p>
+            <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--color-accent-amber)", marginTop: "2px" }}>
+              {reputation.mvpCount > 0 ? `🏆 x${reputation.mvpCount}` : "Promesa"}
+            </p>
+          </div>
+        </div>
+      </GlassCard>
+
       {/* Edit Form */}
       <GlassCard variant="elevated" padding="lg" className="animate-fade-in-up stagger-3">
         <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "16px" }}>Editar perfil</h3>

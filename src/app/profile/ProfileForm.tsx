@@ -118,10 +118,13 @@ export function ProfileForm({ profile, departments }: ProfileFormProps) {
 
       <div>
         <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "6px", display: "block" }}>
-          Teléfono (con código de país)
+          Teléfono (con código de país, sin espacios ni guiones)
         </label>
-        <input name="phone_number" defaultValue={profile.phone_number ?? ""} className="glass-input" placeholder="Ej: +5491112345678" type="tel" />
+        <input name="phone_number" defaultValue={profile.phone_number ?? ""} className="glass-input" placeholder="Ej: +5492615551234" type="tel" />
         <p style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", marginTop: "4px" }}>
+          <strong>Importante para Argentina:</strong> Usá <code>+549</code> seguido del código de área sin el 0 y el número sin el 15. Ej: para el celular 261 15-555-1234, escribí <code>+5492615551234</code>.
+        </p>
+        <p style={{ fontSize: "0.7rem", color: "var(--text-tertiary)", marginTop: "2px" }}>
           Requerido para coordinar por WhatsApp. Solo se comparte con jugadores confirmados en tus partidos.
         </p>
       </div>

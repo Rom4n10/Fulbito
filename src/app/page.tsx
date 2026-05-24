@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { MatchCard } from "@/components/MatchCard";
 import { FreeAgentCard } from "@/components/FreeAgentCard";
+import { MatchFilters } from "@/components/MatchFilters";
 
 interface FeedPageProps {
-  searchParams: Promise<{ tab?: string; depto?: string; pos?: string }>;
+  searchParams: Promise<{ tab?: string; depto?: string; pos?: string; sport?: string }>;
 }
 
 export default async function FeedPage({ searchParams }: FeedPageProps) {
@@ -18,6 +19,57 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   // Clean expired matches (free tier workaround for pg_cron)
   await supabase.rpc("update_expired_matches");
+
+  // Fetch active user's profile to check if incomplete
+  const { data: profile } = await supabase
+    .from("users")
+    .select("phone_number, birth_date")
+    .eq("id", user.id)
+    .single();
+
+  const showProfileWarning = !profile?.phone_number || !profile?.birth_date;
+
+  const profileWarningElement = showProfileWarning && (
+    <GlassCard
+      padding="md"
+      className="animate-fade-in-up"
+      style={{
+        marginBottom: "16px",
+        background: "linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.08))",
+        border: "1px solid rgba(245, 158, 11, 0.3)",
+      }}
+    >
+      <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "1.8rem" }}>⚠️</span>
+        <div style={{ flex: "1 1 200px" }}>
+          <h4 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#f59e0b", marginBottom: "4px" }}>
+            ¡Completá tu perfil para jugar!
+          </h4>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.4", margin: 0 }}>
+            Necesitamos tu <strong>teléfono</strong> (para coordinar por WhatsApp) y tu <strong>fecha de nacimiento</strong> (para calcular tu edad) antes de que puedas postularte a partidos.
+          </p>
+        </div>
+        <Link
+          href="/profile"
+          className="btn"
+          style={{
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+            background: "linear-gradient(to right, #f59e0b, #d97706)",
+            border: "none",
+            color: "white",
+            fontWeight: 600,
+            padding: "8px 16px",
+            borderRadius: "var(--border-radius-sm)",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+          }}
+        >
+          Completar Perfil
+        </Link>
+      </div>
+    </GlassCard>
+  );
 
   if (activeTab === "agentes") {
     // Free agents tab
@@ -43,6 +95,8 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       <div style={{ paddingTop: "16px" }}>
         {/* Tabs */}
         <FeedTabs activeTab={activeTab} />
+
+        {profileWarningElement}
 
         {/* Filters */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "16px", overflowX: "auto" }}>
@@ -93,13 +147,42 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     );
   }
 
+  // Fetch departments for matches filter
+  const { data: departments } = await supabase
+    .from("departments")
+    .select("id, name")
+    .order("name");
+
   // Partidos tab (default)
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("*, creator:users!matches_creator_id_fkey(*), venue:venues!matches_venue_id_fkey(name), team:teams!matches_team_id_fkey(name, logo_url)")
-    .eq("status", "abierto")
-    .gte("scheduled_at", new Date().toISOString())
-    .order("scheduled_at", { ascending: true });
+  let matches;
+  if (sp.depto) {
+    let query = supabase
+      .from("matches")
+      .select("*, creator:users!matches_creator_id_fkey(*), venue:venues!matches_venue_id_fkey!inner(*), team:teams!matches_team_id_fkey(name, logo_url)")
+      .eq("status", "abierto")
+      .eq("venue.department_id", Number(sp.depto))
+      .gte("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: true });
+    
+    if (sp.sport === "futbol" || sp.sport === "padel") {
+      query = query.eq("sport", sp.sport);
+    }
+    const { data } = await query;
+    matches = data;
+  } else {
+    let query = supabase
+      .from("matches")
+      .select("*, creator:users!matches_creator_id_fkey(*), venue:venues!matches_venue_id_fkey(*), team:teams!matches_team_id_fkey(name, logo_url)")
+      .eq("status", "abierto")
+      .gte("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: true });
+
+    if (sp.sport === "futbol" || sp.sport === "padel") {
+      query = query.eq("sport", sp.sport);
+    }
+    const { data } = await query;
+    matches = data;
+  }
 
   // Count matches today for alert banner
   const todayStart = new Date();
@@ -116,6 +199,10 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     <div style={{ paddingTop: "16px" }}>
       {/* Tabs */}
       <FeedTabs activeTab={activeTab} />
+
+      {profileWarningElement}
+
+      <MatchFilters departments={departments ?? []} />
 
       {/* Onboarding Card */}
       <GlassCard

@@ -59,9 +59,23 @@ export default async function MyMatchesPage() {
           ))}
         </div>
       ) : (
-        <p style={{ color: "var(--text-tertiary)", marginBottom: "32px", fontSize: "0.9rem" }}>
-          No creaste partidos todavía
-        </p>
+        <GlassCard
+          padding="md"
+          style={{
+            textAlign: "center",
+            padding: "24px 16px",
+            marginBottom: "32px",
+            background: "rgba(255, 255, 255, 0.02)",
+            border: "1px dashed var(--glass-border)",
+          }}
+        >
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "12px" }}>
+            ¿Tenés ganas de organizar un partido de fútbol o tenis/pádel?
+          </p>
+          <Link href="/matches/create" className="btn btn-primary btn-sm" style={{ textDecoration: "none", display: "inline-flex" }}>
+            ➕ Crear Partido
+          </Link>
+        </GlassCard>
       )}
 
       {/* Accepted */}
@@ -90,9 +104,22 @@ export default async function MyMatchesPage() {
           ))}
         </div>
       ) : (
-        <p style={{ color: "var(--text-tertiary)", fontSize: "0.9rem" }}>
-          No fuiste aceptado en ningún partido todavía
-        </p>
+        <GlassCard
+          padding="md"
+          style={{
+            textAlign: "center",
+            padding: "24px 16px",
+            background: "rgba(255, 255, 255, 0.02)",
+            border: "1px dashed var(--glass-border)",
+          }}
+        >
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "12px" }}>
+            ¿Querés sumarte a un partido que busque jugadores?
+          </p>
+          <Link href="/" className="btn btn-primary btn-sm" style={{ textDecoration: "none", display: "inline-flex", background: "var(--color-accent-green)" }}>
+            🔍 Buscar Partidos
+          </Link>
+        </GlassCard>
       )}
     </div>
   );
