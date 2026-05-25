@@ -109,16 +109,61 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
       {/* Match Info Card */}
       <GlassCard variant="elevated" padding="lg" className="animate-fade-in-up">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <span className={`badge badge-${match.sport}`}>
-            {sportEmoji} {sportLabel}
-          </span>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+            <span className={`badge badge-${match.sport}`}>
+              {sportEmoji} {sportLabel}
+            </span>
+            {match.skill_level && match.skill_level !== "cualquiera" && (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "3px 10px",
+                fontSize: "0.7rem",
+                fontWeight: 600,
+                borderRadius: "var(--border-radius-full)",
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "var(--text-secondary)",
+                border: "1px solid var(--glass-border)",
+              }}>
+                {match.skill_level === "principiante" && "⭐ Principiante"}
+                {match.skill_level === "intermedio" && "⚡ Intermedio"}
+                {match.skill_level === "avanzado" && "🏆 Avanzado"}
+              </span>
+            )}
+            {match.type === "busco_jugador" && match.slots_needed && (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "3px 10px",
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                borderRadius: "var(--border-radius-full)",
+                background: match.sport === "futbol" ? "rgba(34, 197, 94, 0.12)" : "rgba(59, 130, 246, 0.12)",
+                color: match.sport === "futbol" ? "var(--color-futbol)" : "var(--color-padel)",
+                border: match.sport === "futbol" ? "1px solid rgba(34, 197, 94, 0.25)" : "1px solid rgba(59, 130, 246, 0.25)",
+              }}>
+                👥 Faltan {match.slots_needed}
+              </span>
+            )}
+          </div>
           <span className={`badge badge-status-${match.status ?? "abierto"}`}>
             {match.status}
           </span>
         </div>
 
         <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "4px" }}>
-          📍 {locationDisplay}
+          📍{" "}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationDisplay)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "inherit", textDecoration: "underline", textDecorationStyle: "dotted", cursor: "pointer" }}
+            title="Ver ubicación en Google Maps"
+          >
+            {locationDisplay}
+          </a>
         </h2>
         <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "4px" }}>
           🗓️ {formatDate(match.scheduled_at)}

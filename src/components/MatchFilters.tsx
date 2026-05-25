@@ -13,6 +13,7 @@ export function MatchFilters({ departments }: MatchFiltersProps) {
   
   const currentSport = searchParams.get("sport") ?? "";
   const currentDepto = searchParams.get("depto") ?? "";
+  const currentSkill = searchParams.get("skill") ?? "";
 
   function handleSportChange(sport: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -32,6 +33,17 @@ export function MatchFilters({ departments }: MatchFiltersProps) {
       params.set("depto", deptoId);
     } else {
       params.delete("depto");
+    }
+    router.push(`/?${params.toString()}`);
+  }
+
+  function handleSkillChange(skill: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "partidos");
+    if (skill) {
+      params.set("skill", skill);
+    } else {
+      params.delete("skill");
     }
     router.push(`/?${params.toString()}`);
   }
@@ -88,6 +100,30 @@ export function MatchFilters({ departments }: MatchFiltersProps) {
               {d.name}
             </option>
           ))}
+        </select>
+      </div>
+
+      {/* Skill Level Dropdown filter */}
+      <div style={{ flex: 1, minWidth: "150px" }}>
+        <select
+          className="glass-input"
+          style={{
+            padding: "6px 12px",
+            fontSize: "0.8rem",
+            height: "auto",
+            background: "var(--glass-bg)",
+            border: "1px solid var(--glass-border)",
+            width: "100%",
+            color: "var(--text-primary)"
+          }}
+          value={currentSkill}
+          onChange={(e) => handleSkillChange(e.target.value)}
+        >
+          <option value="">⚡ Todos los niveles</option>
+          <option value="principiante">⭐ Principiante</option>
+          <option value="intermedio">⚡ Intermedio</option>
+          <option value="avanzado">🏆 Avanzado</option>
+          <option value="cualquiera">Sin preferencia</option>
         </select>
       </div>
     </div>

@@ -8,6 +8,17 @@ export async function createMatch(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado" };
 
+  // Verificar si el perfil está completo
+  const { data: profile } = await supabase
+    .from("users")
+    .select("phone_number, birth_date, department_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.phone_number || !profile?.birth_date || !profile?.department_id) {
+    return { error: "Debes completar tu perfil (teléfono, fecha de nacimiento y departamento) para crear partidos." };
+  }
+
   const type = formData.get("type") as string;
   const sport = formData.get("sport") as string;
   const venueId = formData.get("venue_id") as string;
@@ -19,6 +30,9 @@ export async function createMatch(formData: FormData) {
   const teamId = formData.get("team_id") as string;
   const pricePerPerson = formData.get("price_per_person") as string;
   const isPaid = formData.get("is_paid") === "true";
+  const skillLevel = (formData.get("skill_level") as string) || "cualquiera";
+  const slotsNeededRaw = formData.get("slots_needed") as string;
+  const slotsNeeded = slotsNeededRaw ? parseInt(slotsNeededRaw) : 1;
 
   if (!type || !sport || !scheduledAt) {
     return { error: "Completá todos los campos obligatorios" };
@@ -56,6 +70,8 @@ export async function createMatch(formData: FormData) {
     team_id: teamId || null,
     price_per_person: pricePerPerson ? parseInt(pricePerPerson) : null,
     is_paid: isPaid,
+    skill_level: skillLevel,
+    slots_needed: slotsNeeded,
   });
 
   if (error) return { error: error.message };

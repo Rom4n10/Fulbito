@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 import { Calendar, Clock, ChevronDown } from "lucide-react";
 
+function getLocalDateString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 interface DateTimePickerProps {
   name: string;
   required?: boolean;
@@ -24,11 +31,11 @@ export function DateTimePicker({ name, required = false }: DateTimePickerProps) 
     const today = new Date();
 
     if (selectedTab === "hoy") {
-      dateStr = today.toISOString().split("T")[0];
+      dateStr = getLocalDateString(today);
     } else if (selectedTab === "manana") {
       const tomorrow = new Date();
       tomorrow.setDate(today.getDate() + 1);
-      dateStr = tomorrow.toISOString().split("T")[0];
+      dateStr = getLocalDateString(tomorrow);
     } else {
       dateStr = customDate;
     }
@@ -53,7 +60,7 @@ export function DateTimePicker({ name, required = false }: DateTimePickerProps) 
   useEffect(() => {
     const today = new Date();
     const currentHour = today.getHours();
-    setCustomDate(today.toISOString().split("T")[0]);
+    setCustomDate(getLocalDateString(today));
 
     if (currentHour >= 22) {
       // If late, default to tomorrow at 20:00

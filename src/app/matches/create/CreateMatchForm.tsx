@@ -21,6 +21,7 @@ export default function CreateMatchPage({ departments, venues, teams }: CreateMa
   const [sport, setSport] = useState<"futbol" | "padel">("futbol");
   const [departmentId, setDepartmentId] = useState<string>("");
   const [useCustomVenue, setUseCustomVenue] = useState(false);
+  const [matchType, setMatchType] = useState<"busco_rival" | "busco_jugador">("busco_rival");
 
   const filteredVenues = venues.filter(
     (v) => (v.sport === sport || v.sport === null) && (departmentId === "" || v.department_id === Number(departmentId))
@@ -49,11 +50,35 @@ export default function CreateMatchPage({ departments, venues, teams }: CreateMa
         <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "6px", display: "block" }}>
           ¿Qué buscás?
         </label>
-        <select name="type" className="glass-input" required>
+        <select 
+          name="type" 
+          className="glass-input" 
+          required
+          value={matchType}
+          onChange={(e) => setMatchType(e.target.value as "busco_rival" | "busco_jugador")}
+        >
           <option value="busco_rival">Busco rival</option>
           <option value="busco_jugador">Busco jugador</option>
         </select>
       </div>
+
+      {/* Slots Needed (conditional) */}
+      {matchType === "busco_jugador" && (
+        <div className="animate-fade-in">
+          <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "6px", display: "block" }}>
+            ¿Cuántos jugadores te faltan?
+          </label>
+          <input 
+            name="slots_needed" 
+            type="number" 
+            min="1" 
+            max="22" 
+            defaultValue="1" 
+            className="glass-input" 
+            required 
+          />
+        </div>
+      )}
 
       {/* Sport */}
       <div>
@@ -64,6 +89,19 @@ export default function CreateMatchPage({ departments, venues, teams }: CreateMa
           value={sport} onChange={(e) => setSport(e.target.value as "futbol" | "padel")}>
           <option value="futbol">⚽ Fútbol</option>
           <option value="padel">🎾 Pádel</option>
+        </select>
+      </div>
+
+      {/* Skill Level */}
+      <div>
+        <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "6px", display: "block" }}>
+          Nivel de juego preferido
+        </label>
+        <select name="skill_level" className="glass-input" required defaultValue="cualquiera">
+          <option value="cualquiera">Sin preferencia / Cualquiera</option>
+          <option value="principiante">⭐ Principiante</option>
+          <option value="intermedio">⚡ Intermedio</option>
+          <option value="avanzado">🏆 Avanzado</option>
         </select>
       </div>
 

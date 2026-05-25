@@ -7,7 +7,7 @@ import { FreeAgentCard } from "@/components/FreeAgentCard";
 import { MatchFilters } from "@/components/MatchFilters";
 
 interface FeedPageProps {
-  searchParams: Promise<{ tab?: string; depto?: string; pos?: string; sport?: string }>;
+  searchParams: Promise<{ tab?: string; depto?: string; pos?: string; sport?: string; skill?: string }>;
 }
 
 export default async function FeedPage({ searchParams }: FeedPageProps) {
@@ -167,6 +167,9 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     if (sp.sport === "futbol" || sp.sport === "padel") {
       query = query.eq("sport", sp.sport);
     }
+    if (sp.skill) {
+      query = query.eq("skill_level", sp.skill);
+    }
     const { data } = await query;
     matches = data;
   } else {
@@ -179,6 +182,9 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
     if (sp.sport === "futbol" || sp.sport === "padel") {
       query = query.eq("sport", sp.sport);
+    }
+    if (sp.skill) {
+      query = query.eq("skill_level", sp.skill);
     }
     const { data } = await query;
     matches = data;

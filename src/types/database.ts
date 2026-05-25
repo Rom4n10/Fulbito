@@ -91,6 +91,8 @@ export type Database = {
           min_age: number | null
           price_per_person: number | null
           scheduled_at: string
+          skill_level: string | null
+          slots_needed: number | null
           sport: Database["public"]["Enums"]["match_sport"]
           status: Database["public"]["Enums"]["match_status"] | null
           team_id: string | null
@@ -108,6 +110,8 @@ export type Database = {
           min_age?: number | null
           price_per_person?: number | null
           scheduled_at: string
+          skill_level?: string | null
+          slots_needed?: number | null
           sport: Database["public"]["Enums"]["match_sport"]
           status?: Database["public"]["Enums"]["match_status"] | null
           team_id?: string | null
@@ -125,6 +129,8 @@ export type Database = {
           min_age?: number | null
           price_per_person?: number | null
           scheduled_at?: string
+          skill_level?: string | null
+          slots_needed?: number | null
           sport?: Database["public"]["Enums"]["match_sport"]
           status?: Database["public"]["Enums"]["match_status"] | null
           team_id?: string | null

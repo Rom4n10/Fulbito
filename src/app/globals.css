@@ -134,12 +134,25 @@ body {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
   border-radius: var(--border-radius-sm);
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   padding: 12px 16px;
   font-size: 0.95rem;
   transition: all var(--transition-base);
   outline: none;
   width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: dark;
+}
+
+/* Fix Safari iOS Autofill background and text color issues */
+.glass-input:-webkit-autofill,
+.glass-input:-webkit-autofill:hover,
+.glass-input:-webkit-autofill:focus,
+.glass-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #11122a inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 select.glass-input {
