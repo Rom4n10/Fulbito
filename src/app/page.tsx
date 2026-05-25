@@ -5,6 +5,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { MatchCard } from "@/components/MatchCard";
 import { FreeAgentCard } from "@/components/FreeAgentCard";
 import { MatchFilters } from "@/components/MatchFilters";
+import { cleanMatchesIfNeeded } from "@/lib/matchCleaner";
 
 interface FeedPageProps {
   searchParams: Promise<{ tab?: string; depto?: string; pos?: string; sport?: string; skill?: string }>;
@@ -17,8 +18,8 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Clean expired matches (free tier workaround for pg_cron)
-  await supabase.rpc("update_expired_matches");
+  // Clean expired matches asynchronously (throttled background execution)
+  cleanMatchesIfNeeded(supabase);
 
   // Fetch active user's profile to check if incomplete
   const { data: profile } = await supabase
