@@ -49,6 +49,10 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
   const userRequest = requests?.find((r) => r.user_id === user.id);
   const isParticipant = isCreator || userRequest?.status === "aceptado";
 
+  // Get accepted participants (rival or players)
+  const acceptedRequests = requests?.filter((r) => r.status === "aceptado") || [];
+  const acceptedPlayers = acceptedRequests.map((r) => r.user).filter(Boolean) as Tables<"users">[];
+
   // Check MVP and reviews state if match is completed
   let mvpResult = null;
   let hasVoted = false;
@@ -67,9 +71,8 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
         .maybeSingle();
       hasVoted = !!vote;
       
-      // Get all participants
-      const acceptedRequests = requests?.filter(r => r.status === "aceptado") || [];
-      const participants = acceptedRequests.map(r => r.user).filter(Boolean) as Tables<"users">[];
+      // Get all participants (creator + accepted requests)
+      const participants = [...acceptedPlayers];
       if (match.creator) participants.push(match.creator);
       
       // Deduplicate participants
@@ -225,9 +228,14 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
       </GlassCard>
 
       {/* Creator Actions */}
-      {isCreator && match.status === "abierto" && (
+      {isCreator && (match.status === "abierto" || match.status === "confirmado") && (
         <div style={{ marginTop: "16px" }}>
-          <MatchActions matchId={id} />
+          <MatchActions
+            matchId={id}
+            matchStatus={match.status ?? "abierto"}
+            matchType={match.type}
+            acceptedPlayers={acceptedPlayers}
+          />
         </div>
       )}
 
